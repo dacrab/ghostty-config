@@ -23,7 +23,7 @@ Here's how your terminal will look with this configuration:
 ## 🚀 Quick Installation
 
 ```bash
-mkdir -p ~/.config/ghostty && curl -o ~/.config/ghostty/config https://raw.githubusercontent.com/dacrab/ghostty-config/main/config
+curl -o ~/.config/ghostty/config https://raw.githubusercontent.com/dacrab/ghostty-config/main/config
 ```
 
 ## 🛠️ Configuration Details
