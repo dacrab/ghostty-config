@@ -16,7 +16,7 @@ background-opacity = 0.9
 
 # Font and cursor settings
 font-family = MesloLGDZ
-font-size = 11
+font-size = 10
 cursor-style = block
 
 # Color scheme (Ash)
