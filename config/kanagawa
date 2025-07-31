@@ -1,0 +1,44 @@
+# Window settings
+window-decoration = false
+window-inherit-working-directory = true
+window-theme = dark
+window-save-state = always
+window-width = 1920
+window-height = 1080
+
+# Mouse settings
+mouse-hide-while-typing = true
+copy-on-select = true
+
+# Background and transparency settings
+background = #1f1f28
+background-opacity = 0.9
+
+# Font and cursor settings
+font-family = MesloLGDZ
+font-size = 12
+cursor-style = block
+
+# Color scheme (Kanagawa)
+foreground = #dcd7ba
+selection-foreground = #dcd7ba
+selection-background = #2d4f67
+cursor-color = #dcd7ba
+
+# ANSI Colors (Kanagawa)
+palette = 0=#090618
+palette = 1=#c34043
+palette = 2=#76946a
+palette = 3=#c0a36e
+palette = 4=#7e9cd8
+palette = 5=#957fb8
+palette = 6=#6a9589
+palette = 7=#c8c093
+palette = 8=#727169
+palette = 9=#e82424
+palette = 10=#98bb6c
+palette = 11=#e6c384
+palette = 12=#7fb4ca
+palette = 13=#938aa9
+palette = 14=#7aa89f
+palette = 15=#dcd7ba

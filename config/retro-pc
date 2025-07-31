@@ -1,0 +1,44 @@
+# Window settings
+window-decoration = false
+window-inherit-working-directory = true
+window-theme = dark
+window-save-state = always
+window-width = 1920
+window-height = 1080
+
+# Mouse settings
+mouse-hide-while-typing = true
+copy-on-select = true
+
+# Background and transparency settings
+background = #0a0a0a
+background-opacity = 0.9
+
+# Font and cursor settings
+font-family = MesloLGDZ
+font-size = 11
+cursor-style = block
+
+# Color scheme (RetroPC)
+foreground = #33ff33
+selection-foreground = #0a0a0a
+selection-background = #33ff33
+cursor-color = #33ff33
+
+# ANSI Colors (RetroPC)
+palette = 0=#0a0a0a
+palette = 1=#bb0000
+palette = 2=#00bb00
+palette = 3=#bbbb00
+palette = 4=#0000bb
+palette = 5=#bb00bb
+palette = 6=#00bbbb
+palette = 7=#bbbbbb
+palette = 8=#555555
+palette = 9=#ff5555
+palette = 10=#55ff55
+palette = 11=#ffff55
+palette = 12=#5555ff
+palette = 13=#ff55ff
+palette = 14=#55ffff
+palette = 15=#ffffff

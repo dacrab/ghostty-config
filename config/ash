@@ -1,0 +1,44 @@
+# Window settings
+window-decoration = false
+window-inherit-working-directory = true
+window-theme = dark
+window-save-state = always
+window-width = 1920
+window-height = 1080
+
+# Mouse settings
+mouse-hide-while-typing = true
+copy-on-select = true
+
+# Background and transparency settings
+background = #2c2f38
+background-opacity = 0.9
+
+# Font and cursor settings
+font-family = MesloLGDZ
+font-size = 11
+cursor-style = block
+
+# Color scheme (Ash)
+foreground = #c8c8d2
+selection-foreground = #c8c8d2
+selection-background = #4a4d59
+cursor-color = #c8c8d2
+
+# ANSI Colors (Ash)
+palette = 0=#2c2f38
+palette = 1=#e88388
+palette = 2=#b3e883
+palette = 3=#e8d683
+palette = 4=#83a8e8
+palette = 5=#e883d6
+palette = 6=#83e8d6
+palette = 7=#e0e0e0
+palette = 8=#5f626e
+palette = 9=#e88388
+palette = 10=#b3e883
+palette = 11=#e8d683
+palette = 12=#83a8e8
+palette = 13=#e883d6
+palette = 14=#83e8d6
+palette = 15=#f5f5f5

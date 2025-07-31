@@ -1,0 +1,44 @@
+# Window settings
+window-decoration = false
+window-inherit-working-directory = true
+window-theme = dark
+window-save-state = always
+window-width = 1920
+window-height = 1080
+
+# Mouse settings
+mouse-hide-while-typing = true
+copy-on-select = true
+
+# Background and transparency settings
+background = #2e3440
+background-opacity = 0.9
+
+# Font and cursor settings
+font-family = MesloLGDZ
+font-size = 11
+cursor-style = block
+
+# Color scheme (Nord)
+foreground = #d8dee9
+selection-foreground = #d8dee9
+selection-background = #434c5e
+cursor-color = #d8dee9
+
+# ANSI Colors (Nord)
+palette = 0=#3b4252
+palette = 1=#bf616a
+palette = 2=#a3be8c
+palette = 3=#ebcb8b
+palette = 4=#81a1c1
+palette = 5=#b48ead
+palette = 6=#88c0d0
+palette = 7=#e5e9f0
+palette = 8=#4c566a
+palette = 9=#bf616a
+palette = 10=#a3be8c
+palette = 11=#ebcb8b
+palette = 12=#81a1c1
+palette = 13=#b48ead
+palette = 14=#8fbcbb
+palette = 15=#eceff4

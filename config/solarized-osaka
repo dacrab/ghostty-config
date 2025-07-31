@@ -1,0 +1,44 @@
+# Window settings
+window-decoration = false
+window-inherit-working-directory = true
+window-theme = dark
+window-save-state = always
+window-width = 1920
+window-height = 1080
+
+# Mouse settings
+mouse-hide-while-typing = true
+copy-on-select = true
+
+# Background and transparency settings
+background = #0e242d
+background-opacity = 0.9
+
+# Font and cursor settings
+font-family = MesloLGDZ
+font-size = 11
+cursor-style = block
+
+# Color scheme (Solarized Osaka)
+foreground = #839496
+selection-foreground = #fdf6e3
+selection-background = #173642
+cursor-color = #839496
+
+# ANSI Colors (Solarized Osaka)
+palette = 0=#173642
+palette = 1=#de3532
+palette = 2=#859910
+palette = 3=#b58910
+palette = 4=#268bd2
+palette = 5=#d33682
+palette = 6=#2aa198
+palette = 7=#eee8d5
+palette = 8=#0e242d
+palette = 9=#cb4b16
+palette = 10=#586e75
+palette = 11=#657b83
+palette = 12=#839496
+palette = 13=#6c71c4
+palette = 14=#93a1a1
+palette = 15=#fdf6e3

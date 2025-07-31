@@ -1,0 +1,44 @@
+# Window settings
+window-decoration = false
+window-inherit-working-directory = true
+window-theme = dark
+window-save-state = always
+window-width = 1920
+window-height = 1080
+
+# Mouse settings
+mouse-hide-while-typing = true
+copy-on-select = true
+
+# Background and transparency settings
+background = #191724
+background-opacity = 0.9
+
+# Font and cursor settings
+font-family = MesloLGDZ
+font-size = 11
+cursor-style = block
+
+# Color scheme (Rose Pine)
+foreground = #e0def4
+selection-foreground = #e0def4
+selection-background = #403d52
+cursor-color = #e0def4
+
+# ANSI Colors (Rose Pine)
+palette = 0=#26233a
+palette = 1=#eb6f92
+palette = 2=#9ccfd8
+palette = 3=#f6c177
+palette = 4=#31748f
+palette = 5=#c4a7e7
+palette = 6=#ebbcba
+palette = 7=#e0def4
+palette = 8=#6e6a86
+palette = 9=#eb6f92
+palette = 10=#9ccfd8
+palette = 11=#f6c177
+palette = 12=#31748f
+palette = 13=#c4a7e7
+palette = 14=#ebbcba
+palette = 15=#e0def4
