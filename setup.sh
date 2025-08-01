@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Ghostty Terminal Emulator - Enhanced Installation & Theme Manager
-# Version: 2.0.0
+# Version: 2.0.1
 # Description: Installs Ghostty and applies beautiful themes automatically
 # License: MIT
 
@@ -9,7 +9,7 @@ set -euo pipefail
 
 # Script configuration
 readonly SCRIPT_NAME="$(basename "${0}")"
-readonly SCRIPT_VERSION="2.0.0"
+readonly SCRIPT_VERSION="2.0.1"
 readonly LOG_FILE="/tmp/ghostty-install.log"
 
 # Enhanced color palette
@@ -57,11 +57,17 @@ log() {
         "STEP")    echo -e "${PURPLE}${ARROW}${NC} ${BOLD}$message${NC}" ;;
     esac
     
-    echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
+    # Only log to file if we can write to it
+    if [[ -w "$(dirname "$LOG_FILE")" ]]; then
+        echo "[$timestamp] [$level] $message" >> "$LOG_FILE" 2>/dev/null || true
+    fi
 }
 
 print_banner() {
-    clear
+    # Don't clear when running from pipe
+    if [[ -t 0 ]]; then
+        clear
+    fi
     echo
     echo -e "${PURPLE}${BOLD}"
     cat << 'EOF'
@@ -75,7 +81,7 @@ print_banner() {
     ║   ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝      ╚═╝      ╚═╝    ║
     ║                                                                ║
     ║                Enhanced Installer & Theme Manager              ║
-    ║                          Version 2.0.0                         ║
+    ║                          Version 2.0.1                        ║
     ╚════════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${NC}"
@@ -93,6 +99,12 @@ spinner() {
     local delay=0.1
     local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
     local temp
+    
+    # Only show spinner if we have a TTY
+    if [[ ! -t 1 ]]; then
+        wait "$pid"
+        return
+    fi
     
     while ps -p "$pid" > /dev/null 2>&1; do
         temp=${spinstr#?}
@@ -149,7 +161,7 @@ EOF
 }
 
 check_dependencies() {
-    local deps=("curl" "grep" "awk" "id" "getent")
+    local deps=("curl" "grep" "awk" "id")
     local missing_deps=()
     
     for dep in "${deps[@]}"; do
@@ -157,6 +169,14 @@ check_dependencies() {
             missing_deps+=("$dep")
         fi
     done
+    
+    # getent might not be available on all systems
+    if command -v getent &> /dev/null; then
+        GETENT_AVAILABLE=true
+    else
+        GETENT_AVAILABLE=false
+        log "DEBUG" "getent not available, using alternative methods"
+    fi
     
     if [[ ${#missing_deps[@]} -gt 0 ]]; then
         log "ERROR" "Missing required dependencies: ${missing_deps[*]}"
@@ -170,6 +190,14 @@ setup_user_environment() {
         REAL_USER="$SUDO_USER"
     elif [[ "$EUID" -eq 0 ]]; then
         log "WARN" "Running as root without SUDO_USER set"
+        
+        # When running from curl | bash, we can't do interactive input
+        if [[ ! -t 0 ]]; then
+            log "ERROR" "Cannot determine user when running from pipe as root"
+            log "INFO" "Try: curl -fsSL <url> | sudo -E bash"
+            exit 1
+        fi
+        
         read -p "Enter username for configuration: " REAL_USER
         if [[ -z "$REAL_USER" ]]; then
             log "ERROR" "Username required for configuration"
@@ -180,9 +208,24 @@ setup_user_environment() {
     fi
     
     # Get user's home directory
-    if ! USER_HOME=$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6); then
-        log "ERROR" "Could not determine home directory for user '$REAL_USER'"
-        exit 1
+    if [[ "$GETENT_AVAILABLE" == true ]]; then
+        if ! USER_HOME=$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6); then
+            USER_HOME=$(eval echo "~$REAL_USER" 2>/dev/null) || USER_HOME="/home/$REAL_USER"
+        fi
+    else
+        # Fallback method
+        if [[ "$REAL_USER" == "root" ]]; then
+            USER_HOME="/root"
+        else
+            USER_HOME="/home/$REAL_USER"
+        fi
+        
+        # Try to get from passwd file directly
+        if [[ -f /etc/passwd ]]; then
+            local passwd_home
+            passwd_home=$(grep "^$REAL_USER:" /etc/passwd 2>/dev/null | cut -d: -f6)
+            [[ -n "$passwd_home" ]] && USER_HOME="$passwd_home"
+        fi
     fi
     
     if [[ ! -d "$USER_HOME" ]]; then
@@ -228,7 +271,11 @@ execute_with_progress() {
         log "DEBUG" "Executing: $cmd"
         eval "$cmd"
     else
-        eval "$cmd" > /tmp/cmd_output 2>&1 &
+        # Create a unique temp file for this command
+        local temp_output
+        temp_output=$(mktemp)
+        
+        eval "$cmd" > "$temp_output" 2>&1 &
         local cmd_pid=$!
         spinner $cmd_pid
         wait $cmd_pid
@@ -238,9 +285,12 @@ execute_with_progress() {
             log "SUCCESS" "$description completed"
         else
             log "ERROR" "$description failed (exit code: $exit_code)"
-            [[ -f /tmp/cmd_output ]] && cat /tmp/cmd_output >&2
+            [[ -f "$temp_output" ]] && cat "$temp_output" >&2
+            rm -f "$temp_output"
             return $exit_code
         fi
+        
+        rm -f "$temp_output"
     fi
 }
 
@@ -338,7 +388,13 @@ ${YELLOW}${BOLD}NixOS Installation Instructions:${NC}
 
 EOF
     
-    read -p "Press Enter to continue with theme configuration..." -r
+    # Don't wait for input when running from pipe
+    if [[ -t 0 ]]; then
+        read -p "Press Enter to continue with theme configuration..." -r
+    else
+        log "INFO" "Continuing with theme configuration..."
+        sleep 2
+    fi
 }
 
 # ============================================================================
@@ -470,27 +526,38 @@ apply_theme_configuration() {
     # Create config directory
     log "DEBUG" "Creating config directory: $config_dir"
     if [[ "$DRY_RUN" != true ]]; then
-        install -d -o "$REAL_USER" -g "$(id -gn "$REAL_USER")" -m 755 "$config_dir"
+        mkdir -p "$config_dir"
+        if [[ "$REAL_USER" != "$(whoami)" ]]; then
+            chown "$REAL_USER":"$(id -gn "$REAL_USER" 2>/dev/null || echo "$REAL_USER")" "$config_dir" 2>/dev/null || true
+        fi
+        chmod 755 "$config_dir"
     fi
     
-    # Show theme selection menu
-    display_theme_menu
-    
+    # Auto-select a popular theme when running from pipe
     local choice
-    while true; do
-        read -p "$(echo -e "${BLUE}${BOLD}Select theme (0-18):${NC} ")" choice
+    if [[ ! -t 0 ]]; then
+        # Default to Tokyo Night theme (popular choice)
+        choice="18"
+        log "INFO" "Auto-selecting Tokyo Night theme (non-interactive mode)"
+    else
+        # Show theme selection menu
+        display_theme_menu
         
-        if [[ "$choice" == "0" ]]; then
-            log "INFO" "Skipping theme configuration"
-            return 0
-        fi
-        
-        if [[ "$choice" =~ ^[1-9]$|^1[0-8]$ ]]; then
-            break
-        fi
-        
-        log "WARN" "Invalid selection. Please choose 0-18."
-    done
+        while true; do
+            read -p "$(echo -e "${BLUE}${BOLD}Select theme (0-18):${NC} ")" choice
+            
+            if [[ "$choice" == "0" ]]; then
+                log "INFO" "Skipping theme configuration"
+                return 0
+            fi
+            
+            if [[ "$choice" =~ ^[1-9]$|^1[0-8]$ ]]; then
+                break
+            fi
+            
+            log "WARN" "Invalid selection. Please choose 0-18."
+        done
+    fi
     
     # Get theme information
     local theme_data
@@ -514,7 +581,9 @@ apply_theme_configuration() {
     # Download and apply theme
     if download_theme "$theme_file" "$theme_name" "$config_path"; then
         if [[ "$DRY_RUN" != true ]]; then
-            chown "$REAL_USER":"$(id -gn "$REAL_USER")" "$config_path"
+            if [[ "$REAL_USER" != "$(whoami)" ]]; then
+                chown "$REAL_USER":"$(id -gn "$REAL_USER" 2>/dev/null || echo "$REAL_USER")" "$config_path" 2>/dev/null || true
+            fi
             chmod 644 "$config_path"
         fi
         
@@ -640,7 +709,7 @@ cleanup() {
     local exit_code=$?
     
     # Clean up temporary files
-    rm -f /tmp/cmd_output /tmp/ghostty_theme_*
+    rm -f /tmp/cmd_output /tmp/ghostty_theme_* 2>/dev/null || true
     
     if [[ $exit_code -eq 0 ]]; then
         echo
@@ -654,7 +723,9 @@ cleanup() {
     else
         echo
         log "ERROR" "Script failed with exit code $exit_code"
-        log "INFO" "Check the log file: $LOG_FILE"
+        if [[ -f "$LOG_FILE" ]]; then
+            log "INFO" "Check the log file: $LOG_FILE"
+        fi
     fi
     
     echo
@@ -665,8 +736,10 @@ main() {
     # Set up error handling and cleanup
     trap cleanup EXIT
     
-    # Initialize log file
-    echo "=== Ghostty Enhanced Installer Log - $(date) ===" > "$LOG_FILE"
+    # Initialize log file (don't fail if we can't write)
+    if [[ -w "$(dirname "$LOG_FILE")" ]]; then
+        echo "=== Ghostty Enhanced Installer Log - $(date) ===" > "$LOG_FILE" 2>/dev/null || true
+    fi
     
     # Parse command line arguments
     parse_arguments "$@"
@@ -686,6 +759,13 @@ main() {
     # Check if Ghostty is installed and handle sudo requirement
     if ! command -v ghostty &> /dev/null && [[ "$SKIP_INSTALL" != true ]]; then
         if [[ $EUID -ne 0 && "$DRY_RUN" != true ]]; then
+            # When running from pipe, we can't re-exec with sudo
+            if [[ ! -t 0 ]]; then
+                log "ERROR" "Ghostty not found and script is running without root privileges"
+                log "INFO" "Please run: curl -fsSL <url> | sudo bash"
+                exit 1
+            fi
+            
             echo -e "${YELLOW}Ghostty not found. Installing requires sudo privileges.${NC}"
             echo -n "Enter your password to install Ghostty: "
             exec sudo "$0" "$@"
