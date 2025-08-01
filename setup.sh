@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
-# Ghostty Terminal Emulator - Enhanced Installation & Theme Manager
-# Version: 3.2.0
-# Description: Installs Ghostty and correctly applies themes from the full selection.
+# Ghostty Terminal Emulator - Universal Installation & Theme Manager
+# Version: 3.4.0
+# Description: Installs Ghostty and themes with a universal, compatible interface
+# that works on any system, with or without special fonts.
 # License: MIT
 
 set -euo pipefail
 
 # Script configuration
 readonly SCRIPT_NAME="ghostty-installer"
-readonly SCRIPT_VERSION="3.2.0"
+readonly SCRIPT_VERSION="3.4.0"
 readonly GITHUB_REPO="https://raw.githubusercontent.com/dacrab/ghostty-config/main"
 
 # Enhanced color palette
@@ -57,7 +58,12 @@ log() {
 
 cleanup() {
     if [[ -n "$LOG_FILE" && -f "$LOG_FILE" ]]; then
-        rm -f "$LOG_FILE"
+        # On successful exit, offer to remove the log. On error, keep it.
+        if [ $? -eq 0 ]; then
+             rm -f "$LOG_FILE"
+        else
+            log "INFO" "An error occurred. Log file kept for review at: $LOG_FILE"
+        fi
     fi
 }
 
@@ -71,7 +77,7 @@ print_banner() {
     ║  ██║   ██║██╔══██║██║   ██║╚════██║   ██║      ██║     ╚██╔╝   ║
     ║  ╚██████╔╝██║  ██║╚██████╔╝███████║   ██║      ██║      ██║    ║
     ║   ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝      ╚═╝      ╚═╝    ║
-    ║                Enhanced Installer & Theme Manager              ║
+    ║              Universal Installer (v3.4.0)                      ║
     ╚════════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${NC}"
@@ -79,14 +85,20 @@ EOF
 }
 
 spinner() {
-    local pid=$1; local message="$2"; local delay=0.1; local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-    echo -ne "  ${message}..."
+    local pid=$1; local message="$2"; local delay=0.1
+    # FIX: Use a universal ASCII spinner that works on all terminals.
+    local spinstr='|/-\'
+    local i=0
+    
+    echo -ne "  ${message}... "
     if [[ -t 1 ]]; then
-        local temp
         while ps -p "$pid" > /dev/null; do
-            temp=${spinstr#?}; printf " ${CYAN}%c${NC}" "$spinstr"; spinstr=$temp${spinstr%"$temp"}; sleep $delay; printf "\b\b";
+            i=$(( (i+1) %4 ))
+            printf "${CYAN}%c${NC}" "${spinstr:$i:1}"
+            sleep $delay
+            printf "\b"
         done
-        printf "  "
+        printf " " # Clear the spinner character
     else
         wait "$pid" 2>/dev/null || true
     fi
@@ -101,12 +113,13 @@ run_with_progress() {
     else
         eval "$cmd" &> "$LOG_FILE.cmd" &
         local pid=$!; spinner "$pid" "$description"; wait "$pid"; local exit_code=$?
+        # Append command output to main log and clean up
         cat "$LOG_FILE.cmd" >> "$LOG_FILE"; rm -f "$LOG_FILE.cmd"
     fi
     if [[ $exit_code -eq 0 ]]; then
         log "SUCCESS" "$description completed"
     else
-        log "ERROR" "$description failed (exit code: $exit_code)"; log "INFO" "Check log for details: $LOG_FILE"; return 1
+        log "ERROR" "$description failed (exit code: $exit_code)"; return 1
     fi
 }
 
@@ -147,8 +160,10 @@ install_ghostty() {
         log "INFO" "Ghostty is already installed. Skipping installation."; return 0
     fi
     
+    # Dependencies no longer include 'unzip'
     case "$(detect_distribution)" in
-        arch|manjaro|endeavouros) run_with_progress "pacman -Sy --noconfirm --needed ghostty" "Installing Ghostty" ;;
+        arch|manjaro|endeavouros)
+            run_with_progress "pacman -Sy --noconfirm --needed ghostty" "Installing Ghostty" ;;
         debian|ubuntu|pop|linuxmint)
             run_with_progress "apt-get update" "Updating package lists"
             run_with_progress "apt-get install -y curl gpg" "Installing dependencies"
@@ -159,6 +174,7 @@ install_ghostty() {
             run_with_progress "apt-get install -y ghostty" "Installing Ghostty package"
             ;;
         fedora|rhel|rocky|almalinux)
+            run_with_progress "dnf install -y dnf-plugins-core" "Installing DNF plugins"
             run_with_progress "dnf copr enable -y dacrab/ghostty" "Enabling Ghostty COPR repository"
             run_with_progress "dnf install -y ghostty" "Installing Ghostty package"
             ;;
@@ -179,7 +195,6 @@ install_ghostty() {
 # ============================================================================
 
 get_themes() {
-    # FIX: This list now matches the user-provided image exactly.
     cat << 'EOF'
 1|Ash|ash|Neutral gray theme for balanced contrast
 2|Catppuccin Latte|catpuccin-latte|Light, warm theme with pastel colors
@@ -212,13 +227,12 @@ show_theme_menu() {
 
 apply_theme() {
     local theme_name="$1"; local theme_file_name="$2"; local config_path="$3"
-    
-    # FIX: The URL now points to the correct /config/ directory and does not add a .toml extension.
     local theme_url="${GITHUB_REPO}/config/${theme_file_name}"
     local temp_file; temp_file=$(mktemp)
 
     if run_with_progress "curl --silent --fail -L -o \"$temp_file\" \"$theme_url\"" "Downloading theme: $theme_name"; then
         mv "$temp_file" "$config_path"
+        # Ensure the final config file has the correct ownership
         local target_group; target_group=$(id -gn "$TARGET_USER" 2>/dev/null || echo "$TARGET_USER")
         chown "$TARGET_USER:$target_group" "$config_path"; chmod 644 "$config_path"
         return 0
@@ -232,14 +246,14 @@ configure_theme() {
     
     local config_dir="$TARGET_HOME/.config/ghostty"; local config_path="$config_dir/config"
     log "STEP" "Setting up configuration directory at $config_dir"
-    mkdir -p "$config_dir"
-    local target_group; target_group=$(id -gn "$TARGET_USER" 2>/dev/null || echo "$TARGET_USER")
-    chown "$TARGET_USER:$target_group" "$config_dir"; chmod 755 "$config_dir"
+    # Run directory creation and permission changes as the target user to avoid root ownership issues.
+    sudo -u "$TARGET_USER" mkdir -p "$config_dir"
     
     show_theme_menu
     local choice; local theme_count; theme_count=$(get_themes | wc -l)
     while true; do
-        read -p "$(echo -e "${BLUE}${BOLD}Select theme (0-$theme_count):${NC} ")" choice
+        # Read from /dev/tty to ensure prompts work even when piped from curl.
+        read -p "$(echo -e "${BLUE}${BOLD}Select theme (0-$theme_count):${NC} ")" choice < /dev/tty
         if [[ "$choice" == "0" ]]; then log "INFO" "Skipping theme configuration."; return 0; fi
         if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "$theme_count" ]; then break; fi
         log "ERROR" "Invalid selection. Please enter a number between 0 and $theme_count." >&2
@@ -250,7 +264,8 @@ configure_theme() {
     
     if [[ -f "$config_path" ]]; then
         log "STEP" "Backing up existing configuration to $config_path.bak"
-        cp "$config_path" "$config_path.bak"
+        # Perform the backup as the user to respect permissions
+        sudo -u "$TARGET_USER" cp "$config_path" "$config_path.bak"
     fi
     
     if apply_theme "$theme_name" "$theme_file_name" "$config_path"; then
@@ -263,6 +278,7 @@ configure_theme() {
 # ============================================================================
 
 main() {
+    # Create a temporary log file that will be cleaned up on exit.
     LOG_FILE=$(mktemp /tmp/ghostty-installer-XXXXXX.log); chmod 644 "$LOG_FILE"
     trap cleanup EXIT INT TERM
     
@@ -280,7 +296,9 @@ main() {
     configure_theme
     
     echo; log "SUCCESS" "Installation completed!"
-    echo -e "\n  ${ARROW} Launch with the command: ${CYAN}ghostty${NC}\n"
+    echo -e "\n  ${ARROW} Launch Ghostty with the command: ${CYAN}ghostty${NC}"
+    echo -e "  ${DIM}For the best experience with icons, consider setting a Nerd Font in your terminal.${NC}\n"
 }
 
+# Ensure the script starts execution here
 main "$@"
