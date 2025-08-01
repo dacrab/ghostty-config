@@ -36,6 +36,7 @@ USER_HOME=""
 DRY_RUN=false
 VERBOSE=false
 SKIP_THEME=false
+SKIP_INSTALL=false
 
 # ============================================================================
 # Enhanced Utility Functions
@@ -118,6 +119,7 @@ ${BOLD}OPTIONS:${NC}
     -v, --verbose       Enable verbose output with debugging info
     -d, --dry-run       Preview actions without making changes
     -s, --skip-theme    Skip theme selection and configuration
+    -i, --skip-install  Skip Ghostty installation (themes only)
     --version           Show script version
 
 ${BOLD}SUPPORTED DISTRIBUTIONS:${NC}
@@ -150,8 +152,6 @@ check_dependencies() {
     local deps=("curl" "grep" "awk" "id" "getent")
     local missing_deps=()
     
-    log "DEBUG" "Checking script dependencies..."
-    
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &> /dev/null; then
             missing_deps+=("$dep")
@@ -160,11 +160,8 @@ check_dependencies() {
     
     if [[ ${#missing_deps[@]} -gt 0 ]]; then
         log "ERROR" "Missing required dependencies: ${missing_deps[*]}"
-        log "ERROR" "Please install these packages and retry"
         exit 1
     fi
-    
-    log "DEBUG" "All dependencies satisfied"
 }
 
 setup_user_environment() {
@@ -201,21 +198,10 @@ setup_user_environment() {
 # ============================================================================
 
 detect_distribution() {
-    log "STEP" "Detecting Linux distribution..."
-    
-    local distro=""
-    local version=""
-    
     if [[ -f /etc/os-release ]]; then
         # shellcheck source=/etc/os-release
         source /etc/os-release
-        distro="${ID,,}"
-        version="${VERSION_ID:-unknown}"
-        
-        log "INFO" "Detected: ${NAME:-$distro} ${version}"
-        log "DEBUG" "Distribution ID: $distro"
-        
-        echo "$distro"
+        echo "${ID,,}"
     else
         log "ERROR" "Cannot determine distribution - /etc/os-release not found"
         exit 1
@@ -385,7 +371,7 @@ EOF
 
 display_theme_menu() {
     echo
-    log "INFO" "Available themes:"
+    echo -e "${CYAN}${BOLD}Apply a custom theme configuration:${NC}"
     echo
     
     local theme_data
@@ -518,10 +504,10 @@ apply_theme_configuration() {
     local theme_name theme_file
     IFS='|' read -r _ theme_name theme_file _ <<< "$theme_data"
     
-    # Backup existing configuration
+    # Backup existing configuration (keep only one backup)
     if [[ -f "$config_path" && "$DRY_RUN" != true ]]; then
-        local backup_path="${config_path}.backup.$(date +%Y%m%d_%H%M%S)"
-        log "INFO" "Backing up existing configuration to $(basename "$backup_path")"
+        local backup_path="${config_dir}/config.bak"
+        log "INFO" "Backing up existing configuration to config.bak"
         cp "$config_path" "$backup_path"
     fi
     
@@ -552,12 +538,10 @@ apply_theme_configuration() {
 # ============================================================================
 
 verify_installation() {
-    log "STEP" "Verifying Ghostty installation"
-    
     if command -v ghostty &> /dev/null; then
         local version
-        if version=$(ghostty --version 2>/dev/null); then
-            log "SUCCESS" "Ghostty installed successfully! Version: $version"
+        if version=$(ghostty --version 2>/dev/null | head -n1 | grep -o 'Ghostty [0-9.]*'); then
+            log "SUCCESS" "Ghostty installed successfully! $version"
         else
             log "SUCCESS" "Ghostty installed successfully!"
         fi
@@ -573,18 +557,18 @@ verify_installation() {
 # ============================================================================
 
 install_ghostty() {
-    local distro
-    distro=$(detect_distribution)
-    
     # Check if already installed
     if command -v ghostty &> /dev/null; then
-        log "INFO" "Ghostty is already installed"
-        local version
-        if version=$(ghostty --version 2>/dev/null); then
-            log "INFO" "Current version: $version"
-        fi
         return 0
     fi
+    
+    # Check if we have root privileges for installation
+    if [[ $EUID -ne 0 ]]; then
+        return 0
+    fi
+    
+    local distro
+    distro=$(detect_distribution)
     
     log "STEP" "Installing Ghostty..."
     
@@ -633,6 +617,10 @@ parse_arguments() {
                 ;;
             -s|--skip-theme)
                 SKIP_THEME=true
+                shift
+                ;;
+            -i|--skip-install)
+                SKIP_INSTALL=true
                 shift
                 ;;
             --version)
@@ -693,26 +681,40 @@ main() {
     fi
     
     # Preflight checks
-    log "STEP" "Performing system checks"
     check_dependencies
     
-    # Check if we need elevated privileges
-    if [[ $EUID -ne 0 && "$DRY_RUN" != true ]]; then
-        log "ERROR" "This script requires elevated privileges"
-        log "INFO" "Please run with sudo: sudo $0"
-        exit 1
+    # Check if Ghostty is installed and handle sudo requirement
+    if ! command -v ghostty &> /dev/null && [[ "$SKIP_INSTALL" != true ]]; then
+        if [[ $EUID -ne 0 && "$DRY_RUN" != true ]]; then
+            echo -e "${YELLOW}Ghostty not found. Installing requires sudo privileges.${NC}"
+            echo -n "Enter your password to install Ghostty: "
+            exec sudo "$0" "$@"
+        fi
     fi
     
-    # Install Ghostty
-    install_ghostty
+    # Install Ghostty if needed
+    local was_installed=false
+    if command -v ghostty &> /dev/null; then
+        was_installed=true
+    fi
     
-    # Verify installation (skip in dry run)
-    if [[ "$DRY_RUN" != true ]]; then
-        verify_installation
+    if [[ "$SKIP_INSTALL" != true ]]; then
+        install_ghostty
+        
+        # Verify installation if we just installed it
+        if [[ "$was_installed" == false && "$DRY_RUN" != true ]]; then
+            verify_installation
+        fi
     fi
     
     # Apply theme configuration
-    apply_theme_configuration
+    if [[ "$SKIP_THEME" != true ]]; then
+        echo
+        if [[ "$was_installed" == true ]]; then
+            echo -e "${GREEN}Ghostty is already installed!${NC}"
+        fi
+        apply_theme_configuration
+    fi
 }
 
 # Execute main function with all arguments
