@@ -29,7 +29,7 @@
 <div align="center">
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dacrab/ghostty-config/main/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/dacrab/ghostty-config/main/setup.sh | sudo bash
 ```
 
 </div>
