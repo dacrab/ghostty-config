@@ -1,30 +1,9 @@
-# Window settings
-window-decoration = false
-window-inherit-working-directory = true
-window-theme = dark
-window-save-state = always
-maximize
-
-# Mouse settings
-mouse-hide-while-typing = true
-copy-on-select = true
-
-# Background and transparency settings
+# Catppuccin Mocha
 background = #1e1e2e
-background-opacity = 0.9
-
-# Font and cursor settings
-font-family = MesloLGDZ
-font-size = 10
-cursor-style = block
-
-# Color scheme (Catppuccin Mocha)
 foreground = #cdd6f4
-selection-foreground = #cdd6f4
 selection-background = #585b70
+selection-foreground = #cdd6f4
 cursor-color = #f5e0dc
-
-# ANSI Colors (Catppuccin Mocha)
 palette = 0=#45475a
 palette = 1=#f38ba8
 palette = 2=#a6e3a1

@@ -1,30 +1,9 @@
-# Window settings
-window-decoration = false
-window-inherit-working-directory = true
-window-theme = dark
-window-save-state = always
-maximize
-
-# Mouse settings
-mouse-hide-while-typing = true
-copy-on-select = true
-
-# Background and transparency settings
+# Retro PC
 background = #0a0a0a
-background-opacity = 0.9
-
-# Font and cursor settings
-font-family = MesloLGDZ
-font-size = 10
-cursor-style = block
-
-# Color scheme (RetroPC)
 foreground = #33ff33
-selection-foreground = #0a0a0a
 selection-background = #33ff33
+selection-foreground = #0a0a0a
 cursor-color = #33ff33
-
-# ANSI Colors (RetroPC)
 palette = 0=#0a0a0a
 palette = 1=#bb0000
 palette = 2=#00bb00

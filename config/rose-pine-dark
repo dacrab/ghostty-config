@@ -1,30 +1,9 @@
-# Window settings
-window-decoration = false
-window-inherit-working-directory = true
-window-theme = dark
-window-save-state = always
-maximize
-
-# Mouse settings
-mouse-hide-while-typing = true
-copy-on-select = true
-
-# Background and transparency settings
+# Rose Pine Dawn
 background = #232136
-background-opacity = 0.9
-
-# Font and cursor settings
-font-family = MesloLGDZ
-font-size = 10
-cursor-style = block
-
-# Color scheme (Rose Pine Dark)
 foreground = #e0def4
-selection-foreground = #e0def4
 selection-background = #44415a
+selection-foreground = #e0def4
 cursor-color = #e0def4
-
-# ANSI Colors (Rose Pine Dark)
 palette = 0=#393552
 palette = 1=#eb6f92
 palette = 2=#9ccfd8

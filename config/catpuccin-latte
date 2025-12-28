@@ -1,30 +1,9 @@
-# Window settings
-window-decoration = false
-window-inherit-working-directory = true
-window-theme = light
-window-save-state = always
-maximize
-
-# Mouse settings
-mouse-hide-while-typing = true
-copy-on-select = true
-
-# Background and transparency settings
+# Catppuccin Latte
 background = #eff1f5
-background-opacity = 0.9
-
-# Font and cursor settings
-font-family = MesloLGDZ
-font-size = 10
-cursor-style = block
-
-# Color scheme (Catppuccin Latte)
 foreground = #4c4f69
-selection-foreground = #4c4f69
 selection-background = #acb0be
+selection-foreground = #4c4f69
 cursor-color = #4c4f69
-
-# ANSI Colors (Catppuccin Latte)
 palette = 0=#5c5f77
 palette = 1=#d20f39
 palette = 2=#40a02b

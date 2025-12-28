@@ -1,30 +1,9 @@
-# Window settings
-window-decoration = false
-window-inherit-working-directory = true
-window-theme = dark
-window-save-state = always
-maximize
-
-# Mouse settings
-mouse-hide-while-typing = true
-copy-on-select = true
-
-# Background and transparency settings
+# Solarized
 background = #002b36
-background-opacity = 0.9
-
-# Font and cursor settings
-font-family = MesloLGDZ
-font-size = 10
-cursor-style = block
-
-# Color scheme (Solarized)
 foreground = #839496
-selection-foreground = #fdf6e3
 selection-background = #073642
+selection-foreground = #fdf6e3
 cursor-color = #839496
-
-# ANSI Colors (Solarized)
 palette = 0=#073642
 palette = 1=#dc322f
 palette = 2=#859900

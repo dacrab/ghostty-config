@@ -1,30 +1,9 @@
-# Window settings
-window-decoration = false
-window-inherit-working-directory = true
-window-theme = dark
-window-save-state = always
-maximize
-
-# Mouse settings
-mouse-hide-while-typing = true
-copy-on-select = true
-
-# Background and transparency settings
+# Nord
 background = #2e3440
-background-opacity = 0.9
-
-# Font and cursor settings
-font-family = MesloLGDZ
-font-size = 10
-cursor-style = block
-
-# Color scheme (Nord)
 foreground = #d8dee9
-selection-foreground = #d8dee9
 selection-background = #434c5e
+selection-foreground = #d8dee9
 cursor-color = #d8dee9
-
-# ANSI Colors (Nord)
 palette = 0=#3b4252
 palette = 1=#bf616a
 palette = 2=#a3be8c

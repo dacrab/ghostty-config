@@ -1,30 +1,9 @@
-# Window settings
-window-decoration = false
-window-inherit-working-directory = true
-window-theme = dark
-window-save-state = always
-maximize
-
-# Mouse settings
-mouse-hide-while-typing = true
-copy-on-select = true
-
-# Background and transparency settings
+# Midnight
 background = #0d0a19
-background-opacity = 0.9
-
-# Font and cursor settings
-font-family = MesloLGDZ
-font-size = 10
-cursor-style = block
-
-# Color scheme (Midnight)
 foreground = #d1d1e0
-selection-foreground = #d1d1e0
 selection-background = #2a2c49
+selection-foreground = #d1d1e0
 cursor-color = #d1d1e0
-
-# ANSI Colors (Midnight)
 palette = 0=#211f30
 palette = 1=#ff5577
 palette = 2=#50fa9b
