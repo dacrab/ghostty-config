@@ -5,7 +5,7 @@ REPO="https://raw.githubusercontent.com/dacrab/ghostty-config/main/config"
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/ghostty"
 
 GREEN='\033[0;32m' BLUE='\033[0;34m' RED='\033[0;31m' NC='\033[0m'
-msg() { echo -e "$1$2${NC}"; }
+msg() { printf '%b\n' "$1$2${NC}"; }
 die() { msg "$RED" "✗ $1"; exit 1; }
 
 get_distro() {
@@ -27,11 +27,15 @@ install_ghostty() {
     msg "$BLUE" "→ Installing Ghostty..."
     case "$(get_distro)" in
         arch|manjaro|endeavouros)
-            sudo pacman -Sy --noconfirm ghostty ;;
+            sudo pacman -Syu ghostty --noconfirm --needed ;;
         debian)
             sudo apt-get update -qq && sudo apt-get install -y -qq curl gpg
-            curl -fsSL https://debian.griffo.io/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/ghostty.gpg
-            echo "deb [signed-by=/usr/share/keyrings/ghostty.gpg] https://debian.griffo.io bookworm main" | sudo tee /etc/apt/sources.list.d/ghostty.list
+            if [[ ! -f /usr/share/keyrings/ghostty.gpg ]]; then
+                curl -fsSL https://debian.griffo.io/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/ghostty.gpg
+            fi
+            if ! grep -qF "deb [signed-by=/usr/share/keyrings/ghostty.gpg] https://debian.griffo.io bookworm main" /etc/apt/sources.list.d/ghostty.list 2>/dev/null; then
+                echo "deb [signed-by=/usr/share/keyrings/ghostty.gpg] https://debian.griffo.io bookworm main" | sudo tee /etc/apt/sources.list.d/ghostty.list
+            fi
             sudo apt-get update -qq && sudo apt-get install -y -qq ghostty ;;
         ubuntu|pop|linuxmint)
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)" ;;
@@ -77,13 +81,14 @@ select_theme() {
     for i in "${!THEMES[@]}"; do printf "  %2d) %s\n" $((i+1)) "${THEMES[$i]%%|*}"; done
     echo -e "   0) Skip\n"
     
-    read -rp "Choice [0-${#THEMES[@]}]: " n
-    [[ "$n" == "0" || -z "$n" ]] && return
-    if ! ((n >= 1 && n <= ${#THEMES[@]})); then
+    while true; do
+        read -rp "Choice [0-${#THEMES[@]}]: " n
+        [[ "$n" == "0" || -z "$n" ]] && return
+        if ((n >= 1 && n <= ${#THEMES[@]})); then
+            break
+        fi
         msg "$RED" "Invalid"
-        select_theme
-        return
-    fi
+    done
     
     file="${THEMES[$((n-1))]##*|}"
     mkdir -p "$CFG"
