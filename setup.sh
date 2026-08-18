@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO="https://raw.githubusercontent.com/dacrab/ghostty-config/main/config"
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/ghostty"
+GHOSTTY_SOURCE="deb [signed-by=/usr/share/keyrings/ghostty.gpg] https://debian.griffo.io bookworm main"
 
 GREEN='\033[0;32m' BLUE='\033[0;34m' RED='\033[0;31m' NC='\033[0m'
 msg() { printf '%b\n' "$1$2${NC}"; }
@@ -33,8 +34,8 @@ install_ghostty() {
             if [[ ! -f /usr/share/keyrings/ghostty.gpg ]]; then
                 curl -fsSL https://debian.griffo.io/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/ghostty.gpg
             fi
-            if ! grep -qF "deb [signed-by=/usr/share/keyrings/ghostty.gpg] https://debian.griffo.io bookworm main" /etc/apt/sources.list.d/ghostty.list 2>/dev/null; then
-                echo "deb [signed-by=/usr/share/keyrings/ghostty.gpg] https://debian.griffo.io bookworm main" | sudo tee /etc/apt/sources.list.d/ghostty.list
+            if ! grep -qF "$GHOSTTY_SOURCE" /etc/apt/sources.list.d/ghostty.list 2>/dev/null; then
+                echo "$GHOSTTY_SOURCE" | sudo tee /etc/apt/sources.list.d/ghostty.list
             fi
             sudo apt-get update -qq && sudo apt-get install -y -qq ghostty ;;
         ubuntu|pop|linuxmint)
